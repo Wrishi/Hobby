@@ -1,5 +1,19 @@
 
 (function(){
+    state = {
+        
+    };
+    reward = {
+        target: 1000,
+        out: -1000,
+        stable: 0
+    }
+    actions = {
+        up: { x: 0.2, y: 0 },
+        left: { x: -0.2, y: 0 },
+        right: { x: 0, y: -0.2 }
+    }
+
     var Engine = Matter.Engine,
         Render = Matter.Render,
         World  = Matter.World,
@@ -13,8 +27,8 @@
     });
 
     var boxA = Bodies.rectangle(400,200,80,80);
-    var boxB = Bodies.rectangle(450, 50, 80,80);
-    var ground = Bodies.rectangle(400, 610, 810, 60, { isStatic: true });
+    var boxB = Bodies.rectangle(450, 540, 80,80, {isStatic: true});
+    var ground = Bodies.rectangle(400, 610, 600, 60, { isStatic: true });
 
     shapes_array = [boxA, boxB, ground];
     current_box = boxA;
