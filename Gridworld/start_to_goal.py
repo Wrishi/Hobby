@@ -5,7 +5,7 @@ gridworld = [[3,3,3,3,3,3,3,3,3,3],
              [3,0,0,0,0,0,0,0,0,3],
              [3,0,0,0,1,0,0,0,0,3],
              [3,0,0,0,1,0,0,0,0,3],
-             [3,0,0,0,1,0,0,0,0,3],
+             [3,0,1,1,1,1,1,0,0,3],
              [3,0,0,0,1,0,0,0,0,3],
              [3,0,0,0,1,0,0,0,0,3],
              [3,0,0,0,0,0,0,0,2,3],
@@ -19,37 +19,68 @@ rewards = {
     3: -50
 }
 
-# E, W, S, N
-actions = [( 1,  0), (-1,  0), ( 0,  1), ( 0, -1)]
+# E, W, S, N, SE, SW, NW, NE
+actions = [( 1,  0), (-1,  0), ( 0,  1), ( 0, -1),
+		   ( 1,  1), ( 1, -1), ( 1,  1), (-1,  1)]
 # a = list(actions.keys())
 
 lr = 0.2
 df = 0.8
+
 # random action values
-Q = np.random.rand(10, 10 ,4)
+# Initialize Q arbitrarily
+Q = np.zeros((10, 10 ,8))
 
-for i in range(10):
-    for j in range(10):
-        for a in actions:
-            # a for which Q[i+x][j+y] is maximum
-            r = rewards[gridworld[i][j]]
-            Q[i][j][a] = (1 - lr) * Q[i][j][a] + lr * (r + df * np.max(Q[i+a[0]][j+a[1]]))
 
-policy = np.max(Q)
+# For each episode
+for episode in range(10000):
+    # Initialise s
+    # i = random.randint(1,9)
+    # j = random.randint(1,9)
+    i,j = 1,1
 
-x, y = 0, 0
-gridworld[x][y] = "4"
-for i in range(10):
-    # action = np.random.choice(a)
-    gridworld[x][y] = "3"
+    # For each episode
+    while True:
+        # choose a from s using policy derived from Q
+        # e-greedy
+        e = 0.1
+        if np.random.uniform() > e:
+            action = np.argmax(Q[i,j])
+        else:
+            action = np.random.randint(0,4)
+
+        # Take action
+        # Observe next state
+        i_n, j_n = i+actions[action][0], j+actions[action][1]
+        # Observe Reward
+        reward = rewards[gridworld[i_n, j_n]]
+
+        Q[i][j][action] = (1 - lr) * Q[i][j][action] + lr * (reward + df * np.max(Q[i_n, j_n]))
+
+        i, j = i_n, j_n
+
+        if gridworld[i,j] in [2,3]:
+            break;
+
+
+
+policy = np.argmax(Q, axis= 2)
+print(policy.T)
+
+x, y = 1, 1
+gridworld[x][y] = "9"
+while True:
+    action = policy[x,y]
+    gridworld[x,y] = "8"
 
     x += actions[action][0]
     y += actions[action][1]
 
-    if x > 9 or x < 0 or y > 9 or y < 0 or gridworld[x][y] == 2:
+    if gridworld[x,y] in [2,3]:
         print("Out of the world.")
         break;
-    gridworld[x][y] = "4"
+    gridworld[x,y] = "9"
 
-    print("Move: ", (i+1), ", Action: ", actions[action])
-    print(gridworld.T)
+
+print("Move: ", (i+1), ", Action: ", actions[action])
+print(gridworld.T)
