@@ -171,8 +171,29 @@ class Gridworld:
 
 
 gw = Gridworld("./basemap.txt")
-agent = Agent(gridworld = gw, position = (1,1))
-agent.play()
+# agent = Agent(gridworld = gw, position = (1,1))
+# agent.play()
+
+while run:
+    pg.time.delay(100)
+
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            run = False
+
+    keys = pg.key.get_pressed()
+
+    if keys[pg.K_LEFT]:
+        x -= 1
+    if keys[pg.K_RIGHT]:
+        x += 1
+    if keys[pg.K_UP]:
+        y -= 1
+    if keys[pg.K_DOWN]:
+        y += 1
+
+    self.draw_position(self.colors["current"])
+
 
 input()
 pg.quit()
