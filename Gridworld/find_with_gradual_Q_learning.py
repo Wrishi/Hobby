@@ -69,7 +69,7 @@ class Agent:
             while True:
                 # choose a from s using policy derived from Q
                 # e-greedy
-                e = 0.1
+                e = 0.4
                 if np.random.uniform() > e:
                     action = np.argmax(self.Q[i,j])
                 else:
