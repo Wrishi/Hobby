@@ -22,6 +22,10 @@ default = {
     "agent_colors": {
         "current": (96,20,212),
         "past": (45,10,112)
+    },
+    "player_colors": {
+        "current": (212,20,80),
+        "past": (100,10,40)
     }
 }
 
@@ -100,35 +104,25 @@ class Agent:
         pg.display.update()
 
     def move(self):
+        run = True
         self.policy = self.get_policy()
         x,y = self.position
         action = self.policy[x,y]
-        x += self.actions[action][0]
-        y += self.actions[action][1]
+        dx = self.actions[action][0]
+        dy = self.actions[action][1]
+        if self.gridworld.gridworld[x+dx,y+dy] == 1:
+            return run
+        x += dx
+        y += dy
         self.position = (x,y)
+        if self.gridworld.gridworld[x,y] in [2,3]:
+            print("Out of the world.")
+            run = False
 
+        self.draw_position(self.colors["current"])
 
-    def play(self):
-        print("Playing moves from policy...")
-        run = True
-        while run:
-            pg.time.delay(100)
-            self.draw_position(self.colors["past"])
+        return run
 
-            for event in pg.event.get():
-                if event.type == pg.QUIT:
-                    run = False
-
-            self.move()
-
-            x,y = self.position
-            if self.gridworld.gridworld[x,y] in [2,3]:
-                print("Out of the world.")
-                run = False
-
-            self.draw_position(self.colors["current"])
-
-        print("Game over...")
 
 
 class Gridworld:
@@ -169,31 +163,78 @@ class Gridworld:
         print("Map drawn...")
         return win
 
+class Player:
+    def __init__(self, gridworld, position, colors=default["player_colors"] ):
+        self.position = position
+        self.gridworld = gridworld
+        self.colors = colors
+        self.draw_position(self.colors["current"])
 
-gw = Gridworld("./basemap.txt")
-# agent = Agent(gridworld = gw, position = (1,1))
-# agent.play()
+    def draw_position(self, color):
+        x,y = self.position
+        dim = self.gridworld.tilesize
+        win = self.gridworld.window
+        pg.draw.rect(win, color, ((x+1) * dim, (y+1) * dim, dim, dim))
+        pg.display.update()
 
-while run:
-    pg.time.delay(100)
+    def move(self, dx, dy):
+        run = True
+        x,y = self.position
+        if self.gridworld.gridworld[x+dx,y+dy] == 1:
+            return run
 
-    for event in pg.event.get():
-        if event.type == pg.QUIT:
+        x += dx
+        y += dy
+        self.position = (x,y)
+
+        if self.gridworld.gridworld[x,y] in [2,3]:
+            print("Out of the world.")
             run = False
 
-    keys = pg.key.get_pressed()
+        self.draw_position(self.colors["current"])
 
-    if keys[pg.K_LEFT]:
-        x -= 1
-    if keys[pg.K_RIGHT]:
-        x += 1
-    if keys[pg.K_UP]:
-        y -= 1
-    if keys[pg.K_DOWN]:
-        y += 1
-
-    self.draw_position(self.colors["current"])
+        return run
 
 
-input()
-pg.quit()
+class Game:
+    def __init__(self):
+        self.gw = Gridworld("./basemap.txt")
+        self.agent = Agent(gridworld = self.gw, position = (1,1))
+        self.player = Player(gridworld = self.gw, position = (1,2))
+
+    def play(self):
+        print("Playing moves from policy...")
+        run = True
+        while run:
+            pg.time.delay(1)
+            self.agent.draw_position(self.agent.colors["past"])
+
+            for event in pg.event.get():
+                if event.type == pg.QUIT:
+                    run = False
+
+            keys = pg.key.get_pressed()
+
+            dx,dy = 0,0
+            if keys[pg.K_LEFT]:
+                dx -= 1
+            if keys[pg.K_RIGHT]:
+                dx += 1
+            if keys[pg.K_UP]:
+                dy -= 1
+            if keys[pg.K_DOWN]:
+                dy += 1
+
+            run = self.player.move(dx,dy)
+            run = self.agent.move()
+
+
+
+        print("Game over...")
+
+
+if __name__ == "__main__":
+    g = Game()
+    g.play()
+    input()
+    pg.quit()
